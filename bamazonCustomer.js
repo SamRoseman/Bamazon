@@ -64,6 +64,7 @@ var query = connection.query(
                 id: data.userchoice
 
             },function(err, result) {
+                var sales = parseFloat(result[0].sales);
                 var price = parseFloat(result[0].price);
                 var quantity = parseInt(result[0].quantity);
                 if (quantity < data.useramount){
@@ -95,6 +96,16 @@ var query = connection.query(
                         }],
                     function(err, result){
                         var total = price * data.useramount;
+                        var updatedSales = sales + total;
+                        var query = connection.query(
+                        "UPDATE products SET ? WHERE ?",
+                        [{
+                            sales: updatedSales
+                        },
+                        {
+                            id: data.userchoice
+                        }]
+                        )
                         console.log("Your purchase was successful. Your total is $" + total);
                         inquirer.prompt([
                             {
