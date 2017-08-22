@@ -31,7 +31,7 @@ function chooseAction(){
                 addInventory();
                 break;
             case "Add new product":
-                //function
+                addItem();
                 break;
             case "Exit Application":
                 connection.end();
@@ -85,7 +85,7 @@ function addInventory(){
         if (err) throw err;
         else {
             for (var i = 0; i < results.length; i++) {
-                items.push(JSON.stringify(results[i].product));
+                items.push(JSON.stringify(results[i].id));
             }
             inquirer.prompt([
                 {
@@ -103,21 +103,78 @@ function addInventory(){
                     }
                 }
             ]).then(function(data){
-                //console.log(data.choice);
                 var query = connection.query(
                 "SELECT * FROM products WHERE ?",
                 {
-                     product: data.choice
+                     id: data.choice
                 },
                 function(err, results) {
-                console.log(results);
-                console.log(data.choice);
+                    var quantity = parseInt(results[0].quantity) + parseInt(data.amount);
+                var query = connection.query(
+                "UPDATE products SET ? WHERE ?",
+                [{
+                    quantity: quantity
+                },
+                {
+                    id: data.choice
+                }],
+                function(err, results){
+                    console.log("Inventory has been added.");
+                    chooseAction();
+                });
                 })
+
             })
         }
     })
 }
 
+function addItem(){
+    inquirer.prompt([
+        {
+            message: "Name of the product.",
+            name: "product"
+        },
+        {
+            message: "Department of the product.",
+            name: "department"
+        },
+        {
+            message: "Price of the product.",
+            name: "price",
+            validate: function(value) {
+                if (isNaN(value) === false) return true;
+                else return false;
+            }
+
+        },
+        {
+            message: "Quantity of the product.",
+            name: "quantity",
+            validate: function(value) {
+                if (isNaN(value) === false) return true;
+                else return false;
+            }
+        }
+    ]).then(function(data){
+        var query = connection.query(
+        "INSERT INTO products SET ?",
+        {
+            product: data.product,
+            department: data.department,
+            price: data.price,
+            quantity: data.quantity
+        }, function(err, results){
+            if (err) throw err;
+
+            else {
+                console.log("Your item has been added.");
+                chooseAction();
+            }
+        })
+    })
+
+}
 //MAIN PROCESS ==================================
 connection.connect(function(err){
     if (err) throw err;
